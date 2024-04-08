@@ -1,0 +1,17 @@
+roof_type,roof_name,slope
+1000,Flachdach,0
+2100,Pultdach,20
+2200,Versetzes Pultdach,20
+3100,Satteldach,40
+3200,Walmdach,25
+3300,Krueppelwalmdach,25
+3400,Mansardendach,30
+3500,Zeltdach,30
+3600,Kegeldach,30
+3700,Kuppeldach,30
+3800,Sheddach,30
+3900,Bogendach,30
+4000,Turmdach,30
+5000,Mischform,30
+9999,Sonstiges,30
+1130,Sonstiges,30

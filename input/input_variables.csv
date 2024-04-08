@@ -1,0 +1,10 @@
+variable,value_input,unit
+pv_efficiency,0.15,%
+inverter_efficiency,0.95,%
+performance_ratio,0.95,%
+deduction_factor,0.15,%
+spec_solar_heat_power,500,W/m2
+share_of_area_solar_heat_collectorsize,0.25,%
+deduction_factor_solar_heat_fallback,0.25,%
+spec_pv_invest,1000,Euro/kw
+spec_solar_invest,1000,Euro/qm
