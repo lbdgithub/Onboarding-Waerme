@@ -572,6 +572,7 @@ def create_infra_onboarding_file_lod1(gdf, avg_floorheight_m, construction_year)
 	gdf['community_key'] = gdf['community_key'].replace('None', 0) 
 
 	#set datatypes
+	gdf['geometry'] = gdf['geometry'].apply(lambda x: MultiPolygon([x]) if x.geom_type == 'Polygon' else x)
 	gdf = gdf.astype({'alkis_id': 'str', \
 					'geometry': 'str', \
 					'height_m': 'float', \
@@ -586,7 +587,11 @@ def create_infra_onboarding_file_lod1(gdf, avg_floorheight_m, construction_year)
 					'street': 'str', \
 					'house_number': 'str', \
 					'district_name': 'str'})
-	
+
+	#remove duplicates
+	#ToDo: Teilweise gibt es mehere Geometrien mit einer ALKIS-ID. Diese Lösung funktioniert, aber es gehen Informationen verloren. Das muss angepasst werden.
+	gdf = gdf.drop_duplicates(subset="alkis_id", keep="first")
+
 	#export as csv
 	gdf.to_csv(path_results + "__INFRA_Onboarding_BuildingsLOD1.csv", index=False)
 
@@ -668,8 +673,6 @@ def create_infra_onboarding_file_lod2(gdf_roof):
 
 
 if __name__ == "__main__":
-
-
 	#ToDo: ggf. nochmal das neueste offizielle Shape zu Gemeinden runterladen und die Datengrundlage des radiation-files überarbeiten anpassen (/input/radiation_postcode_community.geojson) --> Stimmen die Namen noch, gab es Gebietsreformen etc...
 	#alkis_id muss unique sein... polygone müssen zu multipolygonen werden... Problem: z.B. 2 Gebäudegrundflächen mit derselben id, haben unetrschiedliche dachtypen und gebäudehöhen...
 
