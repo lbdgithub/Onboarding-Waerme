@@ -694,6 +694,8 @@ if __name__ == "__main__":
 	#Niedersachsen EPSG:25832, Version 1.0
 	#Sachsen EPSG:25833, Version 1.0
 	#Thüringen EPSG:25832, Version 1.0
+	#
+	#relevant communitys must be listetd in community_names_list
 	#----------------------------------------
 	#----------------------------------------
 
@@ -716,6 +718,7 @@ if __name__ == "__main__":
 	path_results = path_input + '_processed_data/'
 	path_input_solar_calculation = path_base + 'input/'
 	target_epsg_infra_onboarding = 'epsg:4326'
+	community_names_list = ['Neuensalz', 'Treuen']
 
 
 
@@ -782,6 +785,10 @@ if __name__ == "__main__":
 		#RoofSurfaces: technical dimensioning
 		gdf_roof = technical_dimensioning_pv_solar(gdf_roof, df_solar_technical_input, df_roof_qualification)
 
+		#filter buildings that aren't in relevant communitys
+		gdf_ground = gdf_ground.loc[gdf_ground['community_name'].isin(community_names_list)]
+		gdf_roof = gdf_roof.loc[gdf_roof['community_name'].isin(community_names_list)]
+
 		#change datatypes according to infra onboarding documentation
 		gdf_ground = change_datatypes_for_dataframe(gdf_ground)
 		gdf_roof = change_datatypes_for_dataframe(gdf_roof)
@@ -816,7 +823,7 @@ if __name__ == "__main__":
 
 		#create infra onboarding file
 		if surface_layer == "GroundSurface":
-			create_infra_onboarding_file_lod1(gdf,avg_floorheight_m, construction_year)
+			create_infra_onboarding_file_lod1(gdf, avg_floorheight_m, construction_year)
 		else:
 			create_infra_onboarding_file_lod2(gdf)
 
