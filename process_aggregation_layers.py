@@ -15,7 +15,7 @@ def process_districts(path_in, path_res, target_epsg):
     districts_filtered_gdf = districts_gdf.loc[
         (districts_gdf['GEMEINDE'] == 'Treuen, Stadt') | (districts_gdf['GEMEINDE'] == 'Neuensalz')]
     districts_reduced_gdf = districts_filtered_gdf.loc[:, ['SCHLüSSEL', 'ORTSTEIL', 'geometry']]
-    districts_reduced_gdf.rename(columns={'SCHLüSSEL': 'district_key', 'ORTSTEIL': 'name'})
+    districts_reduced_gdf = districts_reduced_gdf.rename(columns={'SCHLüSSEL': 'district_key', 'ORTSTEIL': 'name'})
 
     # create municipalitys
     municipality_gdf = districts_filtered_gdf[['GEMEINDE', 'geometry']]
@@ -68,7 +68,6 @@ def process_alkis_data(path_in, path_res, target_epsg):
         # open file
         path_input_file = path_in + file
         current_file_gdf = gpd.read_file(path_input_file, layer='AX_Flurstueck')
-        current_file_gdf = current_file_gdf.set_crs(target_epsg)
         # extract relevant information
         current_file_reduced_gdf = current_file_gdf.loc[:, ['flurstueckskennzeichen', 'geometry']]
         current_file_reduced_gdf = current_file_reduced_gdf.rename(columns={'flurstueckskennzeichen': 'estate_key'})
@@ -76,7 +75,9 @@ def process_alkis_data(path_in, path_res, target_epsg):
         dataframe_list.append(current_file_reduced_gdf)
 
     # merge and save
-    fluerstuecke_gdf = gpd.GeoDataFrame( pd.concat( dataframe_list, ignore_index=True) )
+    fluerstuecke_gdf = gpd.GeoDataFrame( pd.concat( dataframe_list, ignore_index=True) ).set_crs('epsg:25833')
+    fluerstuecke_gdf = fluerstuecke_gdf.to_crs(target_epsg)
+
     fluerstuecke_gdf.to_file(path_res + '__INFRA_Onboarding_flurstuecke.geojson', driver='GeoJSON')
 
 
@@ -89,9 +90,9 @@ if __name__ == "__main__":
     path_results = path_input + '_processed_data/'
     target_epsg_infra_onboarding = 'epsg:4326'
 
-    process_districts_bool = True
+    process_districts_bool = False
     process_building_blocks_bool = False
-    process_alkis_bool = False
+    process_alkis_bool = True
 
     if process_districts_bool:
         print("----- START PROCESSING DISTRICTS -----")
