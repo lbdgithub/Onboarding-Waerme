@@ -695,7 +695,11 @@ if __name__ == "__main__":
 	#Sachsen EPSG:25833, Version 1.0
 	#Thüringen EPSG:25832, Version 1.0
 	#
-	#relevant communitys must be listetd in community_names_list
+	#OPTIONAL:
+	#-filter_community_names_bool: if buildings should be filtered by community name this variable must be set to true
+	# and the relevant communitys must be listed in community_names_list
+	#-replace_unknown_building_function_bool: if too many buildings have an unknown function this value can be set to
+	# true, and they will be replaced with target_building_function
 	#----------------------------------------
 	#----------------------------------------
 
@@ -712,13 +716,25 @@ if __name__ == "__main__":
 
 
 
+	#set the community names to filter by
+	filter_community_names_bool = True
+	community_names_list = ['Neuensalz', 'Treuen']
+
+
+
+	#set parameters for replacing unknown building functions
+	replace_unknown_building_function_bool = True
+	target_building_function = '31001_1000'
+	min_floor_area_m2 = 40
+
+
+
 	#define input variables
 	path_base = os.getcwd() + '/'
 	path_input = path_base + 'lod2/'
 	path_results = path_input + '_processed_data/'
 	path_input_solar_calculation = path_base + 'input/'
 	target_epsg_infra_onboarding = 'epsg:4326'
-	community_names_list = ['Neuensalz', 'Treuen']
 
 
 
@@ -785,10 +801,6 @@ if __name__ == "__main__":
 		#RoofSurfaces: technical dimensioning
 		gdf_roof = technical_dimensioning_pv_solar(gdf_roof, df_solar_technical_input, df_roof_qualification)
 
-		#filter buildings that aren't in relevant communitys
-		gdf_ground = gdf_ground.loc[gdf_ground['community_name'].isin(community_names_list)]
-		gdf_roof = gdf_roof.loc[gdf_roof['community_name'].isin(community_names_list)]
-
 		#change datatypes according to infra onboarding documentation
 		gdf_ground = change_datatypes_for_dataframe(gdf_ground)
 		gdf_roof = change_datatypes_for_dataframe(gdf_roof)
@@ -817,6 +829,21 @@ if __name__ == "__main__":
 		
 		#set epsg for infra onboardings files
 		gdf = gdf.to_crs(target_epsg_infra_onboarding)
+
+		#filter buildings that aren't in relevant communitys
+		if filter_community_names_bool:
+			print(str(len(gdf.index)) + "(length BEFORE filter community names)")
+			gdf = gdf.loc[gdf['community_name'].isin(community_names_list)]
+			print(str(len(gdf.index)) + "(length AFTER filter community names)")
+
+		#check percentage of buildings with unknown function
+		percentage_unknown_function = gdf.loc[(gdf['function'] == '31001_9998'), 'function'].shape[0]/gdf.shape[0] * 100
+		if (surface_layer == "GroundSurface") and (percentage_unknown_function >= 30):
+			if replace_unknown_building_function_bool:
+				gdf.loc[(gdf['function'] == '31001_9998') & (gdf['floor_area_m2'] < min_floor_area_m2), 'function'] = target_building_function
+				print(percentage_unknown_function, '% of buildings had an unknown function, which was replaced with the function', target_building_function)
+			else:
+				print('WARNING:', percentage_unknown_function, '% of buildings have an unknown function.')
 		
 		#export merged data from gml
 		gdf.to_file(path_results + '__' + str(surface_layer) + '__.geojson', driver='GeoJSON')
