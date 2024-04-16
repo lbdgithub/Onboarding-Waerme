@@ -588,9 +588,15 @@ def create_infra_onboarding_file_lod1(gdf, avg_floorheight_m, construction_year)
 					'house_number': 'str', \
 					'district_name': 'str'})
 
-	#remove duplicates
-	#ToDo: Teilweise gibt es mehere Geometrien mit einer ALKIS-ID. Diese Lösung funktioniert, aber es gehen Informationen verloren. Das muss angepasst werden.
-	gdf = gdf.drop_duplicates(subset="alkis_id", keep="first")
+	# ids have to be unique for processing in INFRA. Therefore, alkis_ids occurring multiple times are modified
+	multiple_alkis_ids_df = gdf.groupby('alkis_id').filter(lambda x: len(x) > 1).drop_duplicates(subset='alkis_id')
+	print(multiple_alkis_ids_df.info())
+	for i, row_i in multiple_alkis_ids_df.iterrows():
+		current_alkis_id = row_i['alkis_id']
+		count = 0
+		for j, row_j in gdf.loc[(gdf['alkis_id'] == current_alkis_id)].iterrows():
+			count += 1
+			gdf.loc[(gdf['geometry'] == row_j['geometry']), 'alkis_id'] = current_alkis_id + '_' + str(count).zfill(2)
 
 	#export as csv
 	gdf.to_csv(path_results + "__INFRA_Onboarding_BuildingsLOD1.csv", index=False)
